@@ -272,20 +272,20 @@ class CustomPlayer:
             moves_with_scores = []
             for next_move in moves:
                 score = get_score(next_move, alpha, beta, maximizing_player=False)
-                if score >= beta:
-                    return score, next_move
 
-                alpha = max([alpha, score])
+                if score >= beta: return score, next_move
+
+                alpha = max(alpha, score)
                 moves_with_scores.append((score, next_move))
             score, next_move = max(moves_with_scores, key=itemgetter(0))
         else:
             moves_with_scores = []
             for next_move in moves:
                 score = get_score(next_move, alpha, beta, maximizing_player=True)
-                if score <= alpha:
-                    return score, next_move
 
-                beta = min([beta, score])
+                if score <= alpha: return score, next_move
+
+                beta = min(beta, score)
                 moves_with_scores.append((score, next_move))
             score, next_move = min(moves_with_scores, key=itemgetter(0))
 
