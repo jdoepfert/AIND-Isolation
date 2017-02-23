@@ -184,16 +184,15 @@ class CustomPlayer:
         if self.time_left() < self.TIMER_THRESHOLD:
                 raise Timeout()
 
-        # get legal moves
-        moves = game.get_legal_moves()
-
         @timeout_decorator(self)
-        def get_score(move):
+        def get_score(move, maximizing_player):
             """Return the score obtained after a move."""
             new_board = game.forecast_move(move)
-            score, _ = self.minimax(new_board, depth-1)
+            score, _ = self.minimax(new_board, depth-1, maximizing_player)
             return score
 
+        # get legal moves
+        moves = game.get_legal_moves()
         # terminal test
         if not moves:
             return game.utility(self), NO_MOVES
@@ -201,10 +200,11 @@ class CustomPlayer:
         if depth == 0:
             return self.score(game, self), NO_MOVES
 
-        moves_with_scores = [(get_score(move), move) for move in moves]
         if maximizing_player:
+            moves_with_scores = [(get_score(m, maximizing_player=False), m) for m in moves]
             score, next_move = max(moves_with_scores, key=itemgetter(0))
         else:
+            moves_with_scores = [(get_score(m, maximizing_player=True), m) for m in moves]
             score, next_move = min(moves_with_scores, key=itemgetter(0))
 
         return score, next_move
@@ -251,5 +251,43 @@ class CustomPlayer:
         if self.time_left() < self.TIMER_THRESHOLD:
             raise Timeout()
 
-        # TODO: finish this function!
-        raise NotImplementedError
+        # get legal moves
+        moves = game.get_legal_moves()
+
+        @timeout_decorator(self)
+        def get_score(move, alpha, beta, maximizing_player):
+            """Return the score obtained after a move."""
+            new_board = game.forecast_move(move)
+            score, _ = self.alphabeta(new_board, depth-1, alpha, beta, maximizing_player)
+            return score
+
+        # terminal test
+        if not moves:
+            return game.utility(self), NO_MOVES
+        # cutoff test
+        if depth == 0:
+            return self.score(game, self), NO_MOVES
+
+        if maximizing_player:
+            moves_with_scores = []
+            for next_move in moves:
+                score = get_score(next_move, alpha, beta, maximizing_player=False)
+                if score >= beta:
+                    return score, next_move
+
+                alpha = max([alpha, score])
+                moves_with_scores.append((score, next_move))
+            score, next_move = max(moves_with_scores, key=itemgetter(0))
+        else:
+            moves_with_scores = []
+            for next_move in moves:
+                score = get_score(next_move, alpha, beta, maximizing_player=True)
+                if score <= alpha:
+                    return score, next_move
+
+                beta = min([beta, score])
+                moves_with_scores.append((score, next_move))
+            score, next_move = min(moves_with_scores, key=itemgetter(0))
+
+        return score, next_move
+
