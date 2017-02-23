@@ -7,7 +7,18 @@ You must test your agent's strength against a set of agents with known
 relative strength using tournament.py and include the results in your report.
 """
 import random
+from operator import itemgetter
 
+NO_MOVES = (-1, -1)
+
+def timeout_decorator(self_object):
+    def decorator(f):
+        def wrapper(*args, **kwargs):
+            if self_object.time_left() < self_object.TIMER_THRESHOLD:
+                raise Timeout()
+            return f(*args, **kwargs)
+        return wrapper
+    return decorator
 
 class Timeout(Exception):
     """Subclass base exception for code clarity."""
@@ -129,7 +140,8 @@ class CustomPlayer:
             # here in order to avoid timeout. The try/except block will
             # automatically catch the exception raised by the search method
             # when the timer gets close to expiring
-            pass
+            score, move = self.minimax(game, 1)
+            return move
 
         except Timeout:
             # Handle any actions required at timeout, if necessary
@@ -170,10 +182,33 @@ class CustomPlayer:
                 evaluation function directly.
         """
         if self.time_left() < self.TIMER_THRESHOLD:
-            raise Timeout()
+                raise Timeout()
 
-        # TODO: finish this function!
-        raise NotImplementedError
+        # get legal moves
+        moves = game.get_legal_moves()
+
+        @timeout_decorator(self)
+        def get_score(move):
+            """Obtain the score for a move."""
+            new_board = game.forecast_move(move)
+            score, _ = self.minimax(new_board, depth-1)
+            return score
+
+        # terminal test
+        if not moves:
+            return game.utility(self), NO_MOVES
+        # cutoff test
+        if depth == 0:
+            return self.score(game, self), NO_MOVES
+
+        moves_with_scores = [(get_score(move), move) for move in moves]
+        if maximizing_player:
+            score, next_move = max(moves_with_scores, key=itemgetter(0))
+        else:
+            score, next_move = min(moves_with_scores, key=itemgetter(0))
+
+        return score, next_move
+
 
     def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf"), maximizing_player=True):
         """Implement minimax search with alpha-beta pruning as described in the
