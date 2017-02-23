@@ -9,7 +9,9 @@ relative strength using tournament.py and include the results in your report.
 import random
 from operator import itemgetter
 
+
 NO_MOVES = (-1, -1)
+
 
 def timeout_decorator(self_object):
     def decorator(f):
@@ -19,6 +21,7 @@ def timeout_decorator(self_object):
             return f(*args, **kwargs)
         return wrapper
     return decorator
+
 
 class Timeout(Exception):
     """Subclass base exception for code clarity."""
@@ -201,16 +204,19 @@ class CustomPlayer:
             return self.score(game, self), NO_MOVES
 
         if maximizing_player:
-            moves_with_scores = [(get_score(m, maximizing_player=False), m) for m in moves]
+            moves_with_scores = [(get_score(m, maximizing_player=False), m)
+                                 for m in moves]
             score, next_move = max(moves_with_scores, key=itemgetter(0))
         else:
-            moves_with_scores = [(get_score(m, maximizing_player=True), m) for m in moves]
+            moves_with_scores = [(get_score(m, maximizing_player=True), m)
+                                 for m in moves]
             score, next_move = min(moves_with_scores, key=itemgetter(0))
 
         return score, next_move
 
 
-    def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf"), maximizing_player=True):
+    def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf"),
+                  maximizing_player=True):
         """Implement minimax search with alpha-beta pruning as described in the
         lectures.
 
@@ -258,7 +264,8 @@ class CustomPlayer:
         def get_score(move, alpha, beta, maximizing_player):
             """Return the score obtained after a move."""
             new_board = game.forecast_move(move)
-            score, _ = self.alphabeta(new_board, depth-1, alpha, beta, maximizing_player)
+            score, _ = self.alphabeta(new_board, depth-1, alpha, beta,
+                                      maximizing_player)
             return score
 
         # terminal test
