@@ -189,7 +189,7 @@ class CustomPlayer:
 
         @timeout_decorator(self)
         def get_score(move):
-            """Obtain the score for a move."""
+            """Return the score obtained after a move."""
             new_board = game.forecast_move(move)
             score, _ = self.minimax(new_board, depth-1)
             return score
