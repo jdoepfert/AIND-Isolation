@@ -7,6 +7,7 @@ You must test your agent's strength against a set of agents with known
 relative strength using tournament.py and include the results in your report.
 """
 import random
+import itertools
 from operator import itemgetter
 
 
@@ -132,23 +133,33 @@ class CustomPlayer:
 
         self.time_left = time_left
 
-        # TODO: finish this function!
-
         # Perform any required initializations, including selecting an initial
         # move from the game board (i.e., an opening book), or returning
         # immediately if there are no legal moves
 
+        if not legal_moves:
+            return NO_MOVES
+
+        if self.method == 'minimax':
+            search_method = self.minimax
+        elif self.method == 'alphabeta':
+            search_method = self.alphabeta
+
+        move = None
         try:
-            # The search method call (alpha beta or minimax) should happen in
-            # here in order to avoid timeout. The try/except block will
-            # automatically catch the exception raised by the search method
-            # when the timer gets close to expiring
-            score, move = self.minimax(game, 1)
+            if self.iterative:
+               for depth in itertools.count():
+                   _, move = search_method(game, depth)
+
+            else:
+                # perform depth limited search
+                _, move = search_method(game, self.search_depth)
+
             return move
 
         except Timeout:
             # Handle any actions required at timeout, if necessary
-            pass
+            return move
 
         # Return the best move from the last completed search iteration
         raise NotImplementedError
