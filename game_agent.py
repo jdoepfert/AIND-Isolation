@@ -14,14 +14,14 @@ from operator import itemgetter
 NO_MOVES = (-1, -1)
 
 
-def timeout_decorator(self_object):
-    def decorator(f):
-        def wrapper(*args, **kwargs):
-            if self_object.time_left() < self_object.TIMER_THRESHOLD:
-                raise Timeout()
-            return f(*args, **kwargs)
-        return wrapper
-    return decorator
+def timeout_decorator(f):
+    """Decorator for adding timeout exception."""
+    def wrapper(*args, **kwargs):
+        self = args[0]
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise Timeout()
+        return f(*args, **kwargs)
+    return wrapper
 
 
 class Timeout(Exception):
@@ -164,6 +164,7 @@ class CustomPlayer:
         # Return the best move from the last completed search iteration
         raise NotImplementedError
 
+    @timeout_decorator
     def minimax(self, game, depth, maximizing_player=True):
         """Implement the minimax search algorithm as described in the lectures.
 
@@ -195,11 +196,9 @@ class CustomPlayer:
                 to pass the project unit tests; you cannot call any other
                 evaluation function directly.
         """
-        if self.time_left() < self.TIMER_THRESHOLD:
-                raise Timeout()
 
-        @timeout_decorator(self)
-        def get_score(move, maximizing_player):
+        @timeout_decorator
+        def get_score(self, move, maximizing_player):
             """Return the score obtained after a move."""
             new_board = game.forecast_move(move)
             score, _ = self.minimax(new_board, depth-1, maximizing_player)
@@ -215,17 +214,17 @@ class CustomPlayer:
             return self.score(game, self), NO_MOVES
 
         if maximizing_player:
-            moves_with_scores = [(get_score(m, maximizing_player=False), m)
+            moves_with_scores = [(get_score(self, m, maximizing_player=False), m)
                                  for m in moves]
             score, next_move = max(moves_with_scores, key=itemgetter(0))
         else:
-            moves_with_scores = [(get_score(m, maximizing_player=True), m)
+            moves_with_scores = [(get_score(self, m, maximizing_player=True), m)
                                  for m in moves]
             score, next_move = min(moves_with_scores, key=itemgetter(0))
 
         return score, next_move
 
-
+    @timeout_decorator
     def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf"),
                   maximizing_player=True):
         """Implement minimax search with alpha-beta pruning as described in the
@@ -265,14 +264,12 @@ class CustomPlayer:
                 to pass the project unit tests; you cannot call any other
                 evaluation function directly.
         """
-        if self.time_left() < self.TIMER_THRESHOLD:
-            raise Timeout()
 
         # get legal moves
         moves = game.get_legal_moves()
 
-        @timeout_decorator(self)
-        def get_score(move, alpha, beta, maximizing_player):
+        @timeout_decorator
+        def get_score(self, move, alpha, beta, maximizing_player):
             """Return the score obtained after a move."""
             new_board = game.forecast_move(move)
             score, _ = self.alphabeta(new_board, depth-1, alpha, beta,
@@ -289,7 +286,7 @@ class CustomPlayer:
         if maximizing_player:
             moves_with_scores = []
             for next_move in moves:
-                score = get_score(next_move, alpha, beta, maximizing_player=False)
+                score = get_score(self, next_move, alpha, beta, maximizing_player=False)
 
                 if score >= beta: return score, next_move
 
@@ -299,7 +296,7 @@ class CustomPlayer:
         else:
             moves_with_scores = []
             for next_move in moves:
-                score = get_score(next_move, alpha, beta, maximizing_player=True)
+                score = get_score(self, next_move, alpha, beta, maximizing_player=True)
 
                 if score <= alpha: return score, next_move
 
