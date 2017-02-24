@@ -159,10 +159,10 @@ class CustomPlayer:
 
         except Timeout:
             # Handle any actions required at timeout, if necessary
-            return move
+            pass
 
         # Return the best move from the last completed search iteration
-        raise NotImplementedError
+        return move
 
     @timeout_decorator
     def minimax(self, game, depth, maximizing_player=True):
