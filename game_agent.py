@@ -198,7 +198,7 @@ class CustomPlayer:
         """
 
         @timeout_decorator
-        def get_score(self, move, maximizing_player):
+        def get_score(self, move, depth, maximizing_player):
             """Return the score obtained after a move."""
             new_board = game.forecast_move(move)
             score, _ = self.minimax(new_board, depth-1, maximizing_player)
@@ -214,11 +214,11 @@ class CustomPlayer:
             return self.score(game, self), NO_MOVES
 
         if maximizing_player:
-            moves_with_scores = [(get_score(self, m, maximizing_player=False), m)
+            moves_with_scores = [(get_score(self, m, depth, maximizing_player=False), m)
                                  for m in moves]
             score, next_move = max(moves_with_scores, key=itemgetter(0))
         else:
-            moves_with_scores = [(get_score(self, m, maximizing_player=True), m)
+            moves_with_scores = [(get_score(self, m, depth, maximizing_player=True), m)
                                  for m in moves]
             score, next_move = min(moves_with_scores, key=itemgetter(0))
 
@@ -269,7 +269,7 @@ class CustomPlayer:
         moves = game.get_legal_moves()
 
         @timeout_decorator
-        def get_score(self, move, alpha, beta, maximizing_player):
+        def get_score(self, move, depth, alpha, beta, maximizing_player):
             """Return the score obtained after a move."""
             new_board = game.forecast_move(move)
             score, _ = self.alphabeta(new_board, depth-1, alpha, beta,
@@ -286,7 +286,7 @@ class CustomPlayer:
         if maximizing_player:
             moves_with_scores = []
             for next_move in moves:
-                score = get_score(self, next_move, alpha, beta, maximizing_player=False)
+                score = get_score(self, next_move, depth, alpha, beta, maximizing_player=False)
 
                 if score >= beta: return score, next_move
 
@@ -296,7 +296,7 @@ class CustomPlayer:
         else:
             moves_with_scores = []
             for next_move in moves:
-                score = get_score(self, next_move, alpha, beta, maximizing_player=True)
+                score = get_score(self, next_move, depth, alpha, beta, maximizing_player=True)
 
                 if score <= alpha: return score, next_move
 
