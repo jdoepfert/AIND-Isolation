@@ -6,16 +6,26 @@ augment the test suite with your own test cases to further test your code.
 You must test your agent's strength against a set of agents with known
 relative strength using tournament.py and include the results in your report.
 """
+
+
+# Oh, I see. No, you shouldn’t modify those. However, for some machines, the timeout is a bit too aggressive so people are getting timeouts just trying to run the test cases.
+#
+# [8:59]
+# But the only time it’s ok to modify the timeout is if the errors are happening *before* the student heuristic. That is, if the basic test agents are getting time outs because your machine can’t search to the specified depths
+#
+
 import random
 import itertools
 from operator import itemgetter
+from functools import wraps
 
 
 NO_MOVES = (-1, -1)
 
 
-def timeout_decorator(f):
+def add_timeout(f):
     """Decorator for adding timeout exception."""
+    @wraps(f)
     def wrapper(*args, **kwargs):
         self = args[0]
         if self.time_left() < self.TIMER_THRESHOLD:
@@ -24,9 +34,39 @@ def timeout_decorator(f):
     return wrapper
 
 
+def add_loser_winner_scores(heuristic):
+    """Decorator defining scores for both winning and losing outcomes for a heuristic."""
+    @wraps(heuristic)
+    def wrapper(game, player):
+        if game.is_loser(player):
+            return float("-inf")
+        if game.is_winner(player):
+            return float("inf")
+        return heuristic(game, player)
+    return wrapper
+
+
 class Timeout(Exception):
     """Subclass base exception for code clarity."""
     pass
+
+
+@add_loser_winner_scores
+def number_moves_heuristic(game, player):
+    """Return number of legal moves for a player.
+
+    Parameters
+    ----------
+    game : `isolation.Board`
+    player : object
+        A player instance in the current game
+    Returns
+    -------
+    float
+        The heuristic value of the current game state to the specified player.
+    """
+    player_moves = float(len(game.get_legal_moves(player)))
+    return player_moves
 
 
 def custom_score(game, player):
@@ -52,8 +92,7 @@ def custom_score(game, player):
         The heuristic value of the current game state to the specified player.
     """
 
-    # TODO: finish this function!
-    raise NotImplementedError
+    return number_moves_heuristic(game, player)
 
 
 class CustomPlayer:
@@ -148,14 +187,13 @@ class CustomPlayer:
         move = None
         try:
             if self.iterative:
+                # TODO: stop iterative deepening when terminal state has been reached
                for depth in itertools.count():
                    _, move = search_method(game, depth)
 
             else:
                 # perform depth limited search
                 _, move = search_method(game, self.search_depth)
-
-            return move
 
         except Timeout:
             # Handle any actions required at timeout, if necessary
@@ -164,7 +202,7 @@ class CustomPlayer:
         # Return the best move from the last completed search iteration
         return move
 
-    @timeout_decorator
+    @add_timeout
     def minimax(self, game, depth, maximizing_player=True):
         """Implement the minimax search algorithm as described in the lectures.
 
@@ -197,7 +235,7 @@ class CustomPlayer:
                 evaluation function directly.
         """
 
-        @timeout_decorator
+        @add_timeout
         def get_score(self, move, depth, maximizing_player):
             """Return the score obtained after a move."""
             new_board = game.forecast_move(move)
@@ -224,7 +262,7 @@ class CustomPlayer:
 
         return score, next_move
 
-    @timeout_decorator
+    @add_timeout
     def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf"),
                   maximizing_player=True):
         """Implement minimax search with alpha-beta pruning as described in the
@@ -268,7 +306,7 @@ class CustomPlayer:
         # get legal moves
         moves = game.get_legal_moves()
 
-        @timeout_decorator
+        @add_timeout
         def get_score(self, move, depth, alpha, beta, maximizing_player):
             """Return the score obtained after a move."""
             new_board = game.forecast_move(move)
