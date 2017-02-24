@@ -242,6 +242,22 @@ class CustomPlayer:
         return move
 
     @add_timeout
+    def get_score(self, move, game, depth, maximizing_player, alpha=None, beta=None):
+        """Return the score obtained after a specified move.
+
+        If `alpha` and `beta` are specified, alphabeta search will be used,
+        and minimax search otherwise.
+        """
+        new_board = game.forecast_move(move)
+        if alpha is not None and beta is not None:
+            score, _ = self.alphabeta(new_board, depth-1, alpha, beta,
+                                      maximizing_player)
+        else:
+            score, _ = self.minimax(new_board, depth-1, maximizing_player)
+
+        return score
+
+    @add_timeout
     def minimax(self, game, depth, maximizing_player=True):
         """Implement the minimax search algorithm as described in the lectures.
 
@@ -274,13 +290,6 @@ class CustomPlayer:
                 evaluation function directly.
         """
 
-        @add_timeout
-        def get_score(self, move, depth, maximizing_player):
-            """Return the score obtained after a move."""
-            new_board = game.forecast_move(move)
-            score, _ = self.minimax(new_board, depth-1, maximizing_player)
-            return score
-
         # get legal moves
         moves = game.get_legal_moves()
         # terminal test
@@ -291,11 +300,11 @@ class CustomPlayer:
             return self.score(game, self), NO_MOVES
 
         if maximizing_player:
-            moves_with_scores = [(get_score(self, m, depth, maximizing_player=False), m)
+            moves_with_scores = [(self.get_score(m, game, depth, maximizing_player=False), m)
                                  for m in moves]
             score, next_move = max(moves_with_scores, key=itemgetter(0))
         else:
-            moves_with_scores = [(get_score(self, m, depth, maximizing_player=True), m)
+            moves_with_scores = [(self.get_score(m, game, depth, maximizing_player=True), m)
                                  for m in moves]
             score, next_move = min(moves_with_scores, key=itemgetter(0))
 
@@ -345,14 +354,6 @@ class CustomPlayer:
         # get legal moves
         moves = game.get_legal_moves()
 
-        @add_timeout
-        def get_score(self, move, depth, alpha, beta, maximizing_player):
-            """Return the score obtained after a move."""
-            new_board = game.forecast_move(move)
-            score, _ = self.alphabeta(new_board, depth-1, alpha, beta,
-                                      maximizing_player)
-            return score
-
         # terminal test
         if not moves:
             return game.utility(self), NO_MOVES
@@ -363,7 +364,8 @@ class CustomPlayer:
         if maximizing_player:
             moves_with_scores = []
             for next_move in moves:
-                score = get_score(self, next_move, depth, alpha, beta, maximizing_player=False)
+                score = self.get_score(next_move, game, depth, maximizing_player=False,
+                                       alpha=alpha, beta=beta)
 
                 if score >= beta: return score, next_move
 
@@ -373,7 +375,8 @@ class CustomPlayer:
         else:
             moves_with_scores = []
             for next_move in moves:
-                score = get_score(self, next_move, depth, alpha, beta, maximizing_player=True)
+                score = self.get_score(next_move, game, depth, maximizing_player=True,
+                                       alpha=alpha, beta=beta)
 
                 if score <= alpha: return score, next_move
 
