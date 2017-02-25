@@ -255,8 +255,8 @@ class Project1Test(unittest.TestCase):
         game.apply_move(p1_location)
         game.apply_move(p2_location)
 
-        expected_1 = game_agent.center_distance_heuristic(game, player1, w_own=1, w_opp=0)
-        expected_2 = game_agent.center_distance_heuristic(game, player1, w_own=0, w_opp=1)
+        expected_1 = game_agent.center_distance_heuristic(game, player1, w_own=1, w_opp=0, normalize=True)
+        expected_2 = game_agent.center_distance_heuristic(game, player1, w_own=0, w_opp=1, normalize=True)
 
         self.assertAlmostEquals(expected_1, 2**0.5/18**0.5)
         self.assertAlmostEquals(expected_2, 3/18**0.5)
