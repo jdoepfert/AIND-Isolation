@@ -76,12 +76,12 @@ def add_timeout(f):
 def add_loser_winner_scores(heuristic):
     """Decorator defining scores for both winning and losing outcomes for a heuristic."""
     @wraps(heuristic)
-    def wrapper(game, player):
+    def wrapper(game, player, **kwargs):
         if game.is_loser(player):
             return float("-inf")
         if game.is_winner(player):
             return float("inf")
-        return heuristic(game, player)
+        return heuristic(game, player, **kwargs)
     return wrapper
 
 
@@ -91,21 +91,59 @@ class Timeout(Exception):
 
 
 @add_loser_winner_scores
-def number_moves_heuristic(game, player):
-    """Return number of legal moves for a player.
+def weighed_diff_moves_heuristic(game, player, w_own=1, w_opp=1):
+    """Weighted difference between the number of moves available to the two
+     players.
+
+     The default (`w_own`=1, `w_opp`=1) results in the `improved_score()`
+     heuristic.
 
     Parameters
     ----------
     game : `isolation.Board`
     player : object
         A player instance in the current game
+    w_own, w_opp: float
+        Weights for own moves and opponent moves, respectively
+
     Returns
     -------
     float
         The heuristic value of the current game state to the specified player.
     """
-    player_moves = float(len(game.get_legal_moves(player)))
-    return player_moves
+    own_moves = len(game.get_legal_moves(player))
+    opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
+    return float(w_own*own_moves + w_opp*opp_moves)
+
+
+aggressive_heuristic = partial(weighed_diff_moves_heuristic, w_own=1, w_opp=-2)
+relaxed_heuristic = partial(weighed_diff_moves_heuristic, w_own=1, w_opp=-0.5)
+
+
+@add_loser_winner_scores
+def center_distance_heuristic(game, player, w_own=1, w_opp=1):
+    """Weighted difference between the number of moves available to the two
+     players.
+
+     The default (`w_own`=1, `w_opp`=1) results in the `improved_score()`
+     heuristic.
+
+    Parameters
+    ----------
+    game : `isolation.Board`
+    player : object
+        A player instance in the current game
+    w_own, w_opp: float
+        Weights for own moves and opponent moves, respectively
+
+    Returns
+    -------
+    float
+        The heuristic value of the current game state to the specified player.
+    """
+    own_moves = len(game.get_legal_moves(player))
+    opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
+    return float(w_own*own_moves + w_opp*opp_moves)
 
 
 def custom_score(game, player):
@@ -131,7 +169,8 @@ def custom_score(game, player):
         The heuristic value of the current game state to the specified player.
     """
 
-    return number_moves_heuristic(game, player)
+    # return relaxed_heuristic(game, player)
+    return aggressive_heuristic(game, player)
 
 
 class CustomPlayer:
