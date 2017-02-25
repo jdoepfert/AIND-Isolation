@@ -6,16 +6,6 @@ augment the test suite with your own test cases to further test your code.
 You must test your agent's strength against a set of agents with known
 relative strength using tournament.py and include the results in your report.
 """
-
-
-# Oh, I see. No, you shouldn’t modify those. However, for some machines, the timeout is a bit too aggressive so people are getting timeouts just trying to run the test cases.
-#
-# [8:59]
-# But the only time it’s ok to modify the timeout is if the errors are happening *before* the student heuristic. That is, if the basic test agents are getting time outs because your machine can’t search to the specified depths
-#
-
-
-
 import random
 import itertools
 from operator import itemgetter
@@ -54,11 +44,11 @@ class Timeout(Exception):
 
 
 @add_loser_winner_scores
-def weighed_diff_moves_heuristic(game, player, w_own=1, w_opp=1):
-    """Weighted difference between the number of moves available to the two
+def moves_heuristic(game, player, w_own=1, w_opp=-1):
+    """Weighted sum of the number of moves available to the two
      players.
 
-     The default (`w_own`=1, `w_opp`=1) results in the `improved_score()`
+     The default (`w_own`=1, `w_opp`=-1) results in the `improved_score()`
      heuristic.
 
     Parameters
@@ -79,17 +69,15 @@ def weighed_diff_moves_heuristic(game, player, w_own=1, w_opp=1):
     return float(w_own*own_moves + w_opp*opp_moves)
 
 
-aggressive_heuristic = partial(weighed_diff_moves_heuristic, w_own=1, w_opp=-2)
-relaxed_heuristic = partial(weighed_diff_moves_heuristic, w_own=1, w_opp=-0.5)
+aggressive_move_heuristic = partial(moves_heuristic, w_own=1, w_opp=-2.5)
+relaxed_move_heuristic = partial(moves_heuristic, w_own=1, w_opp=-0.5)
 
 
 @add_loser_winner_scores
-def center_distance_heuristic(game, player, w_own=1, w_opp=1):
-    """Weighted difference between the number of moves available to the two
-     players.
+def center_distance_heuristic(game, player, w_own=1, w_opp=1, normalize=False):
+    """Weighted sum of the distances of the player's positions to the center,
+    optionally normalized by the maximum possible distance.
 
-     The default (`w_own`=1, `w_opp`=1) results in the `improved_score()`
-     heuristic.
 
     Parameters
     ----------
@@ -97,17 +85,38 @@ def center_distance_heuristic(game, player, w_own=1, w_opp=1):
     player : object
         A player instance in the current game
     w_own, w_opp: float
-        Weights for own moves and opponent moves, respectively
+        Weights for own distance and opponent distance, respectively
+    normalize: bool
+        If true, center distances are normalized by the maximum possible distance.
 
     Returns
     -------
     float
         The heuristic value of the current game state to the specified player.
     """
-    own_moves = len(game.get_legal_moves(player))
-    opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
-    return float(w_own*own_moves + w_opp*opp_moves)
+    h, w = game.height, game.width
+    center_y, center_x = ((h-1)/2, (w-1)/2)
+    own_y, own_x = game.get_player_location(player)
+    opp_y, opp_x  = game.get_player_location(game.get_opponent(player))
+    opp_dist = ((opp_x - center_x)**2 + (opp_y - center_y)**2)**0.5
+    own_dist = ((own_x - center_x)**2 + (own_y - center_y)**2)**0.5
 
+    # normalize
+    if normalize:
+        max_dist = ((center_x)**2 + (center_y)**2)**0.5
+        own_dist /= max_dist
+        opp_dist /= max_dist
+
+    return float(w_own*own_dist + w_opp*opp_dist)
+
+aggressive_distance_heuristic = partial(center_distance_heuristic,
+                                        w_own=-1.5, w_opp=3, normalize=True)
+relaxed_distance_heuristic = partial(center_distance_heuristic,
+                                     w_own=-1.5, w_opp=0.75, normalize=True)
+aggressive_distance_heuristic_norm = partial(center_distance_heuristic,
+                                             w_own=-1.5, w_opp=3, normalize=True)
+relaxed_distance_heuristic_norm = partial(center_distance_heuristic,
+                                          w_own=-1.5, w_opp=0.75, normalize=True)
 
 def custom_score(game, player):
     """Calculate the heuristic value of a game state from the point of view
@@ -133,7 +142,12 @@ def custom_score(game, player):
     """
 
     # return relaxed_heuristic(game, player)
-    return aggressive_heuristic(game, player)
+    # return aggressive_move_heuristic(game, player)
+    return (relaxed_move_heuristic(game, player)
+            + aggressive_distance_heuristic(game, player))
+    return (relaxed_move_heuristic(game, player)
+            + aggressive_distance_heuristic(game, player))
+
 
 
 class CustomPlayer:
