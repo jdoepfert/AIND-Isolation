@@ -14,49 +14,12 @@ relative strength using tournament.py and include the results in your report.
 # But the only time it’s ok to modify the timeout is if the errors are happening *before* the student heuristic. That is, if the basic test agents are getting time outs because your machine can’t search to the specified depths
 #
 
-#
-# *************************
-#  Evaluating: ID_Improved
-# *************************
-#
-# Playing Matches:
-# ----------
-#   Match 1: ID_Improved vs   Random    	Result: 18 to 2
-#   Match 2: ID_Improved vs   MM_Null   	Result: 18 to 2
-#   Match 3: ID_Improved vs   MM_Open   	Result: 14 to 6
-#   Match 4: ID_Improved vs MM_Improved 	Result: 14 to 6
-#   Match 5: ID_Improved vs   AB_Null   	Result: 14 to 6
-#   Match 6: ID_Improved vs   AB_Open   	Result: 14 to 6
-#   Match 7: ID_Improved vs AB_Improved 	Result: 11 to 9
-#
-#
-# Results:
-# ----------
-# ID_Improved         73.57%
-#
-# *************************
-#    Evaluating: Student
-# *************************
-#
-# Playing Matches:
-# ----------
-#   Match 1:   Student   vs   Random    	Result: 18 to 2
-#   Match 2:   Student   vs   MM_Null   	Result: 18 to 2
-#   Match 3:   Student   vs   MM_Open   	Result: 16 to 4
-#   Match 4:   Student   vs MM_Improved 	Result: 12 to 8
-#   Match 5:   Student   vs   AB_Null   	Result: 16 to 4
-#   Match 6:   Student   vs   AB_Open   	Result: 9 to 11
-#   Match 7:   Student   vs AB_Improved 	Result: 13 to 7
-#
-#
-# Results:
-# ----------
-# Student             72.86%
+
 
 import random
 import itertools
 from operator import itemgetter
-from functools import wraps
+from functools import wraps, partial
 
 
 NO_MOVES = (-1, -1)
@@ -265,7 +228,7 @@ class CustomPlayer:
         move = None
         try:
             if self.iterative:
-                # TODO: stop iterative deepening when terminal state has been reached
+                # TODO: stop iterative deepening when terminal state is reached
                for depth in itertools.count():
                    _, move = search_method(game, depth)
 
