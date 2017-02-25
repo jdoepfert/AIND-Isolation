@@ -243,7 +243,25 @@ class Project1Test(unittest.TestCase):
         self.assertIsInstance(game_agent.custom_score(game, player1), float,
             "The heuristic function should return a floating point")
 
-    timeout(5)
+
+    def test_center_distance_heuristic(self):
+        """ Test output interface of heuristic score function interface."""
+
+        player1 = "Player1"
+        player2 = "Player2"
+        p1_location = (4, 4)
+        p2_location = (3, 6)
+        game = isolation.Board(player1, player2, width=7, height=7)
+        game.apply_move(p1_location)
+        game.apply_move(p2_location)
+
+        expected_1 = game_agent.center_distance_heuristic(game, player1, w_own=1, w_opp=0)
+        expected_2 = game_agent.center_distance_heuristic(game, player1, w_own=0, w_opp=1)
+
+        self.assertAlmostEquals(expected_1, 2**0.5/18**0.5)
+        self.assertAlmostEquals(expected_2, 3/18**0.5)
+
+    @timeout(5)
     # @unittest.skip("Skip simple minimax test.")  # Uncomment this line to skip test
     def test_minimax_interface(self):
         """ Test CustomPlayer.minimax interface with simple input """
