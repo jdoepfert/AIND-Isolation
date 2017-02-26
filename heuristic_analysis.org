@@ -1,0 +1,150 @@
+#+OPTIONS: toc:nil author:nil creator:nil
+#+LaTeX_HEADER: \author{J\"org D\"opfert}
+
+
+#+TITLE: Advanced Game Playing (Lesson 6): Heuristic Analysis
+
+* Custom evaluation heuristics
+First I defined the following heuristic function templates:
+
+ + *=moves_heuristic=*
+   - This heuristic is a weighted sum of the number of moves available
+     to the two players. It is calculated as $w_{\mathrm{own}} \cdot
+     m_{\mathrm{own}}  + w_{\mathrm{opp}} \cdot  m_{\mathrm{opp}}$,
+     where $m$ are the number of moves available and $w$ are the
+     weights. Note that for $w_{\mathrm{opp}}=-1$ and
+     $w_{\mathrm{own}}=1$, this heuristic is identical to the
+     =improved_score()= heuristic given in the code template.
+
+ + *=center_distance_heuristic=*
+   - This heuristic is a weighted sum of the distances of the player's
+     positions to the board center. It is calculated as $w_{\mathrm{own}} \cdot
+     d_{\mathrm{own}}  + w_{\mathrm{opp}} \cdot  d_{\mathrm{opp}}$,
+     where $d$ are the distances to the board center and $w$ are the
+     weights. Optionally, the distances $d$ can be normalized by the
+     maximum possible distance from the center on the board.
+
+
+\noindent Then, I utilized and combined these templates in different ways
+to create custom heuristic functions like so:
+
+ - *=aggressive_move_heuristic=*
+   - =moves_heuristic= with $w_{\mathrm{opp}}=-2.5$ and
+     $w_{\mathrm{own}}=1$. This should drive the agent to aggressively
+     reduce the number of moves available to the opponent, while
+     maximizing its own movement possibilities.
+
+ - *=relaxed_move_heuristic=*
+   - =moves_heuristic= with $w_{\mathrm{opp}}=-0.5$ and
+     $w_{\mathrm{own}}=1$. This should again drive the agent 
+     reduce the number of moves available to the opponent, but less aggressively.
+
+ - *=relaxed_move_relaxed_distance=*
+   - This heuristic is the sum of the =relaxed_move_heuristic= above
+     and the =center_distance_heuristic= with weights $w_{\mathrm{opp}}=0.75$ and
+     $w_{\mathrm{own}}=-1.5$ to penalize positions far away from the
+     board center (which are closer to the board's edges/corners), and
+     slightly rewarding the opponent being in such positions.
+
+ - *=relaxed_move_aggressive_distance=*
+   - This heuristic is the sum of the =relaxed_move_heuristic= above
+     and the =center_distance_heuristic= with weights $w_{\mathrm{opp}}=3$ and
+     $w_{\mathrm{own}}=-1.5$ to again penalize positions far away from the
+     board center and to aggressively drive the opponent to such positions.
+
+ - *=relaxed_move_relaxed_distance_norm=*
+   - Same as =relaxed_move_relaxed_distance=, but with normalized
+     center distances. This will probably decrease the influence of the
+     =center_distance_heuristic= in the beginning of the game, when
+     there are still many moves available to both players.
+
+ - *=relaxed_move_aggressive_distance_norm=*
+   - Same as =relaxed_move_aggressive_distance=, but with normalized
+     center distances.
+
+* Performance of the heuristics
+After defining the above custom heuristics, I evaluated them against the
+=ID_Improved= agent in =tournament.py= and recorded the =win_ratio=
+score returned from =play_round()=. To be more confident about the
+resulting scores, I increased the =NUM_MATCHES= parameter to 50.
+
+
+\noindent The results are summarized in the following table and Fig. [[fig:fig1]].
+
+#+begin_src python :exports results :results raw :noweb strip-export
+<<preamble>>
+df = pd.read_hdf('data/full_run_relaxed_move_aggressive_distance_relaxed_move_relaxed_distance_relaxed_move_relaxed_distance_norm_relaxed_move_aggressive_distance_norm_aggressive_move_heuristic_relaxed_move_heuristic_ID_Improved.h5').rename(columns={'index': 'heuristic', 'player': 'score'}).sort_values('score', ascending=False)
+df.heuristic = df.heuristic.str.replace('_', ' ')
+df.score = np.round(df.score, 2)
+df = df.set_index('heuristic')
+df['diff to "ID Improved"'] = df.score - df.loc['ID Improved'].score
+return(tabulate(df, headers="keys", tablefmt="orgtbl"))
+#+end_src
+
+#+ATTR_LATEX: :align l|cc
+#+RESULTS:
+| heuristic                             | score | diff to "ID Improved" |
+|---------------------------------------+-------+-----------------------|
+| relaxed move aggressive distance norm | 78.29 |                  2.86 |
+| relaxed move relaxed distance         | 77.79 |                  2.36 |
+| aggressive move heuristic             | 76.79 |                  1.36 |
+| relaxed move relaxed distance norm    |  76.5 |                  1.07 |
+| relaxed move aggressive distance      | 75.71 |                  0.28 |
+| relaxed move heuristic                | 75.71 |                  0.28 |
+| ID Improved                           | 75.43 |                     0 |
+
+According to the table, all the custom heuristics outperform =ID Improved=,
+however, the differences in scores are rather small. For a proper
+assessment, statistical tests and probably an even higher number of
+=NUM_MATCHES= would be required. 
+
+
+#+HEADER: :var path="data/analysis.pdf"
+#+begin_src python :exports results :results file :noweb strip-export
+<<preamble>>
+df = pd.read_hdf('data/full_run_relaxed_move_aggressive_distance_relaxed_move_relaxed_distance_relaxed_move_relaxed_distance_norm_relaxed_move_aggressive_distance_norm_aggressive_move_heuristic_relaxed_move_heuristic_ID_Improved.h5').rename(columns={'index': 'heuristic'}).sort_values('player')
+df.heuristic = df.heuristic.str.replace('_', ' ')
+#plt.figure(figsize=(4,2))
+sns.set_context("poster")
+p = df.set_index('heuristic').plot(kind='barh', legend=False)
+plt.gcf().tight_layout()
+plt.xlabel('score')
+fig = plt.gcf()
+fig.savefig(path)
+return path # return filename to org-mode
+#+end_src
+#+LABEL:   fig:fig1
+#+CAPTION: Performance of the different custom heuristics.
+#+ATTR_LATEX: :width 12cm :placement [h!]
+#+RESULTS:
+[[file:data/analysis.pdf]]
+
+* Conclusion
+Based on these preliminary results in the previous section, I recommend using the \newline{} =relaxed_move_aggressive_distance_norm=
+heuristic and also implemented it as the =custom_score()= in
+=game_agent.py=.
+
+Apart from defining and testing other heuristic functions, next steps could include:
+
++ a proper statistical analysis of the results
++ evaluating the results of the custom agents against the different
+  agents defined in =tournament.py= separately 
++ letting the agents with the different custom heuristics play against
+  each other
+
+
+* code stuff                                                       :noexport:
+
+#+NAME: preamble
+#+BEGIN_SRC python :results file :exports none 
+import matplotlib
+import numpy as np
+import seaborn as sns
+import pandas as pd
+
+matplotlib.use('Agg')
+
+import matplotlib.pyplot as plt
+
+from tabulate import tabulate 
+#+END_SRC
