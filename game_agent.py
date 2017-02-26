@@ -109,14 +109,36 @@ def center_distance_heuristic(game, player, w_own=1, w_opp=1, normalize=False):
 
     return float(w_own*own_dist + w_opp*opp_dist)
 
+
 aggressive_distance_heuristic = partial(center_distance_heuristic,
-                                        w_own=-1.5, w_opp=3, normalize=True)
+                                        w_own=-1.5, w_opp=3)
 relaxed_distance_heuristic = partial(center_distance_heuristic,
-                                     w_own=-1.5, w_opp=0.75, normalize=True)
+                                     w_own=-1.5, w_opp=0.75)
 aggressive_distance_heuristic_norm = partial(center_distance_heuristic,
                                              w_own=-1.5, w_opp=3, normalize=True)
 relaxed_distance_heuristic_norm = partial(center_distance_heuristic,
                                           w_own=-1.5, w_opp=0.75, normalize=True)
+
+
+def relaxed_move_relaxed_distance(game, player):
+    return (relaxed_move_heuristic(game, player)
+            + relaxed_distance_heuristic(game, player))
+
+
+def relaxed_move_aggressive_distance(game, player):
+    return (relaxed_move_heuristic(game, player)
+            + aggressive_distance_heuristic(game, player))
+
+
+def relaxed_move_relaxed_distance_norm(game, player):
+    return (relaxed_move_heuristic(game, player)
+            + aggressive_distance_heuristic_norm(game, player))
+
+
+def relaxed_move_aggressive_distance_norm(game, player):
+    return (relaxed_move_heuristic(game, player)
+            + relaxed_distance_heuristic_norm(game, player))
+
 
 def custom_score(game, player):
     """Calculate the heuristic value of a game state from the point of view
@@ -140,13 +162,7 @@ def custom_score(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-
-    # return relaxed_heuristic(game, player)
-    # return aggressive_move_heuristic(game, player)
-    return (relaxed_move_heuristic(game, player)
-            + aggressive_distance_heuristic(game, player))
-    return (relaxed_move_heuristic(game, player)
-            + aggressive_distance_heuristic(game, player))
+    return relaxed_move_aggressive_distance_norm(game, player)
 
 
 
