@@ -33,9 +33,12 @@ from sample_players import null_score
 from sample_players import open_move_score
 from sample_players import improved_score
 from game_agent import CustomPlayer
-from game_agent import custom_score, aggressive_move_heuristic, relaxed_move_heuristic
+from game_agent import custom_score, aggressive_move_heuristic, relaxed_move_heuristic, \
+    relaxed_move_relaxed_distance, relaxed_move_aggressive_distance, \
+    relaxed_move_relaxed_distance_norm, relaxed_move_aggressive_distance_norm
 
-NUM_MATCHES = 5  # number of matches against each opponent
+
+NUM_MATCHES = 50  # number of matches against each opponent
 TIME_LIMIT = 150  # number of milliseconds before timeout
 
 TIMEOUT_WARNING = "One or more agents lost a match this round due to " + \
@@ -168,7 +171,22 @@ def main():
                    Agent(CustomPlayer(score_fn=aggressive_move_heuristic, **CUSTOM_ARGS), "AggressiveMovesStudent"),
                    Agent(CustomPlayer(score_fn=relaxed_move_heuristic, **CUSTOM_ARGS), "RelaxedMovesStudent")
                    ]
-
+    test_agents = [
+                   Agent(CustomPlayer(score_fn=relaxed_move_aggressive_distance, **CUSTOM_ARGS),
+                         "relaxed_move_aggressive_distance"),
+                   Agent(CustomPlayer(score_fn=relaxed_move_relaxed_distance, **CUSTOM_ARGS),
+                         "relaxed_move_relaxed_distance"),
+                   Agent(CustomPlayer(score_fn=relaxed_move_relaxed_distance_norm, **CUSTOM_ARGS),
+                         "relaxed_move_relaxed_distance_norm"),
+                   Agent(CustomPlayer(score_fn=relaxed_move_aggressive_distance_norm, **CUSTOM_ARGS),
+                         "relaxed_move_aggressive_distance_norm"),
+                   Agent(CustomPlayer(score_fn=aggressive_move_heuristic, **CUSTOM_ARGS),
+                         "aggressive_move_heuristic"),
+                   Agent(CustomPlayer(score_fn=relaxed_move_heuristic, **CUSTOM_ARGS),
+                         "relaxed_move_heuristic"),
+                   Agent(CustomPlayer(score_fn=improved_score, **CUSTOM_ARGS), "ID_Improved")
+                   ]
+   
     res = pd.Series(name='player')
     agent_names = []
     print(DESCRIPTION)
@@ -186,7 +204,7 @@ def main():
         print("{!s:<15}{:>10.2f}%".format(agentUT.name, win_ratio))
         res[agentUT.name] = win_ratio
         agent_names.append(agentUT.name)
-    res.reset_index().to_hdf('data/{}.h5'.format("_".join(agent_names)), 'test')
+        res.reset_index().to_hdf('data/full_run_{}.h5'.format("_".join(agent_names)), 'test', mode='w')
 
 if __name__ == "__main__":
     main()
