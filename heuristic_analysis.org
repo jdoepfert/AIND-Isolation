@@ -94,7 +94,7 @@ return(tabulate(df, headers="keys", tablefmt="orgtbl"))
 | ID Improved                           | 75.43 |                     0 |
 
 According to the table, all the custom heuristics outperform =ID Improved=,
-however, the differences in scores are rather small. For a proper
+however, the differences in scores are pretty small. For a proper
 assessment, statistical tests and probably an even higher number of
 =NUM_MATCHES= would be required. 
 
@@ -120,11 +120,21 @@ return path # return filename to org-mode
 [[file:data/analysis.pdf]]
 
 * Conclusion
-Based on these preliminary results in the previous section, I recommend using the \newline{} =relaxed_move_aggressive_distance_norm=
+Based on these preliminary results in the previous section, 
+I recommend using the \newline{} =relaxed_move_aggressive_distance_norm=
 heuristic and also implemented it as the =custom_score()= in
-=game_agent.py=.
+=game_agent.py=. However, I am by no means sure if this is the best
+heuristic among the tested ones, since the differences in the score
+from the experiments are rather small.
 
-Apart from defining and testing other heuristic functions, next steps could include:
+The rather small differences could stem from the fact that the number
+of moves available and the center distance are probably somewhat
+correlated: The further away a player is from the center, the less
+room there is for possible moves. Therefore, the all the heuristics
+probably catch rather similar things.
+
+Apart from defining and testing other heuristic functions, next steps
+could include:
 
 + a proper statistical analysis of the results
 + evaluating the results of the custom agents against the different
@@ -133,10 +143,10 @@ Apart from defining and testing other heuristic functions, next steps could incl
   each other
 
 
-* code stuff                                                       :noexport:
+* code blocks                                                      :noexport:
 
 #+NAME: preamble
-#+BEGIN_SRC python :results file :exports none 
+#+BEGIN_SRC python :results file :exports code 
 import matplotlib
 import numpy as np
 import seaborn as sns
