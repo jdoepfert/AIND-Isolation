@@ -1,0 +1,90 @@
+#+OPTIONS: toc:nil author:nil creator:nil
+#+LaTeX_HEADER: \author{J\"org D\"opfert}
+
+
+#+TITLE: Advanced Game Playing (Lesson 6): Paper Review AlphaGo\footnote{Silver et al.:"Mastering the game of Go with deep neural networks and tree search" (2016), doi:10.1038/nature16961}
+
+
+* What is the paper about?
+The authors present a novel computational approach for playing the
+classic game Go. Their agent AlphaGo, which based on convolutional
+neural networks (CNNs), reinforcement learning (RL) and Monte Carlo
+tree search (MCTS), is the first computer program ever able
+to beat a professional human Go player in a tournament.
+
+
+* Methods
+
+** Policy network
+The authors first train a CNN $p_\sigma$ to predict moves (or policies, i.e.
+probability distributions over possible moves, to be precise) given a board
+state, using 30 million data points from a data base containing moves
+from human expert players. Next, the authors try to improve this policy
+network using RL, leading to an improved policy network $p_\rho$.
+Specifically, they simulate games between different policy networks,
+initialized with the weights of $p_\sigma$, and then update the
+weights of  $p_\rho$ to
+maximize the expected outcome.
+
+** Value network
+The authors again use a CNN for the evaluation of board positions. This CNN
+tries to predict the outcome of a game (i.e. a single number), given a
+board state. To train the network, the authors generated 30 million
+distinct board states, and observe the outcome of those states by
+letting the RL policy network $p_\rho$ play against itself.
+
+** Search
+Finally, the authors combine the policy and value CNNs in an MCTS
+algorithm. This search algorithm selects "optimal" actions in each
+board state by peforming rapid simulations that explore the game
+tree, incorporating the policy and the value networks described above,
+and random rollouts using a very fast policy network $p_\pi$ (trained
+in a similar way as $p_\sigma$). 
+
+
+* Results
+
+The final AlphaGo program, combining policy and value CNNs with MCTS,
+was shown to perform much better than current state-of-the-art
+MCTS-based Go programs, with a winning rate of more than 99%. Running
+AlphaGo on a distributed system with much more computational power
+even led to a 100% winning rate. Finally, this distributed AlphaGo version was
+for the first time able to beat a professional human Go player in a
+tournament.
+
+
+Another noteworthy result is the fact that the policy network $p_\rho$
+alone, using no search at all, was already able to win 85% of all games against
+Pachi, an MCTS-based Go program.
+
+Finally, the initial policy network $p_\sigma$, obtained purely with
+supervised learning, achieved an accuracy of 57% in predicting moves,
+compared to the by then state-of-the-art accuracy of 44% reported by
+other research groups.
+
+
+* Why should I care?
+
+Before publication of AlphaGo, Go was considered one of the most
+challenging games for artificial intelligence (AI) due to the large
+search space, with much larger branching factor and depth compared to
+other games like chess. The article demostrates how Go can, despite
+those challenges, still be mastered with AI methods: Instead of
+evaluating more and more board positions during search, the
+authors focussed on generating precise policies and evaulation
+functions using CNNs.
+
+This breakthrough provides hope that other AI problems previously
+considered intractable can now be solved as well with similar approaches.
+
+
+* Remarks
+
+In the "Extended Data Table 6" of the paper, one can see that the
+single machine AlphaGo program used 48 CPUs and 8 GPUs, compared to 32
+CPUs for the strongest performing MCTS-based program "CrazyStone". It
+would be interesting to see how AlphaGo would perform with the same
+number of cores (32) and without GPUs to make the comparison fairer.
+
+My guess is that AlphaGo cannot run at all without GPUs, since
+evaluation of the CNNs would probably take to much time.
